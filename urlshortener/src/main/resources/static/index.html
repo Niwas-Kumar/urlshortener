@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f4f4f9;
+        }
+        h1 { color: #333; }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .error { color: red; }
+        .short-url {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .short-url button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<h1>URL Shortener</h1>
+
+<input type="text" id="longUrl" placeholder="Enter long URL" size="50"/>
+<button type="button" onclick="shortenUrl()">Shorten</button>
+
+
+<div class="result" id="result"></div>
+
+<script>
+    async function shortenUrl() {
+        const longUrl = document.getElementById('longUrl').value.trim();
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '';
+
+        if (!longUrl) {
+            resultDiv.innerHTML = '<span class="error">Please enter a URL</span>';
+            return;
+        }
+
+        try {
+            const response = await fetch('/shorten', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ longUrl })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                resultDiv.innerHTML = `<span class="error">${data.error}</span>`;
+                return;
+            }
+
+            const shortUrl = data.shortUrl;
+
+            resultDiv.innerHTML = `
+                <div class="short-url">
+                    <a href="${shortUrl}" target="_blank">${shortUrl}</a>
+                    <button onclick="copyToClipboard('${shortUrl}')">Copy</button>
+                </div>
+            `;
+        } catch (err) {
+            resultDiv.innerHTML = '<span class="error">Server error</span>';
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text)
+            .then(() => alert('Copied to clipboard!'))
+            .catch(() => alert('Failed to copy'));
+    }
+</script>
+
+</body>
+</html>
